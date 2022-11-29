@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import javax.persistence.EntityManager;
 import models.tasklist;
 import utils.DBUtil;
+import javax.servlet.RequestDispatcher;
 
 /**
  * Servlet implementation class NewServlet
@@ -30,30 +31,14 @@ public class NewServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        EntityManager em = DBUtil.createEntityManager();
-        em.getTransaction().begin();
+        request.setAttribute("_token", request.getSession().getId());
 
-        // Messageのインスタンスを生成
-        tasklist m = new tasklist();
+        // おまじないとしてのインスタンスを生成
+        request.setAttribute("tasklist", new tasklist());
 
-        // mの各フィールドにデータを代入
-
-        String content = "hello";
-        m.setContent(content);
-
-        Timestamp currentTime = new Timestamp(System.currentTimeMillis());     // 現在の日時を取得
-        m.setCreated_at(currentTime);
-        m.setUpdated_at(currentTime);
-
-        // データベースに保存
-        em.persist(m);
-        em.getTransaction().commit();
-
-        // 自動採番されたIDの値を表示
-        response.getWriter().append(Integer.valueOf(m.getId()).toString());
-
-        em.close();
-	}
+        RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/new.jsp");
+        rd.forward(request, response);
+     }
 
 
 
