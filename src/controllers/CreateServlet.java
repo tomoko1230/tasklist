@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import models.tasklist;
 import utils.DBUtil;
+import models.validators.MessageValidator;
+import java.util.List;
+import javax.servlet.RequestDispatcher;
 
 /**
  * Servlet implementation class CreateServlet
@@ -45,13 +48,28 @@ public class CreateServlet extends HttpServlet {
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
             m.setCreated_at(currentTime);
             m.setUpdated_at(currentTime);
+            
+            List<String> errors = MessageValidator.validate(m);
+            if(errors.size() > 0) {
+                em.close();
 
-            em.persist(m);
-            em.getTransaction().commit();
-            request.getSession().setAttribute("flush", "登録が完了しました。");       // ここを追記
-            em.close();
+                // フォームに初期値を設定、さらにエラーメッセージを送る
+                request.setAttribute("_token", request.getSession().getId());
+                request.setAttribute("tasklist", m);
+                request.setAttribute("errors", errors);
 
-            response.sendRedirect(request.getContextPath() + "/index");
+                RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/new.jsp");
+                rd.forward(request, response);
+            } else {
+                // データベースに保存
+                em.persist(m);
+                em.getTransaction().commit();
+                request.getSession().setAttribute("flush", "登録が完了しました。");
+                em.close();
+
+                // indexのページにリダイレクト
+                response.sendRedirect(request.getContextPath() + "/index");
+            }
         }
     }
 
